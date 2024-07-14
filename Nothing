@@ -1,0 +1,101 @@
+import random
+
+class Player:
+    def __init__(self, name):
+        self.name = name
+        self.health = 100
+        self.inventory = []
+        self.location = 'Entrance'
+
+    def move(self, direction, rooms):
+        if direction in rooms[self.location]['exits']:
+            self.location = rooms[self.location]['exits'][direction]
+            print(f"You move to the {self.location}.")
+        else:
+            print("You can't go that way.")
+
+    def pick_item(self, item):
+        self.inventory.append(item)
+        print(f"You picked up a {item}.")
+
+    def show_inventory(self):
+        print("Inventory:", ', '.join(self.inventory))
+
+class Game:
+    def __init__(self):
+        self.rooms = {
+            'Entrance': {
+                'description': 'You are at the entrance of a dark cave.',
+                'exits': {'north': 'Hallway'}
+            },
+            'Hallway': {
+                'description': 'A long, narrow hallway. There is an eerie silence.',
+                'exits': {'south': 'Entrance', 'east': 'Treasure Room', 'west': 'Monster Room'},
+                'item': 'torch'
+            },
+            'Treasure Room': {
+                'description': 'You have found the treasure room! Gold and jewels are everywhere.',
+                'exits': {'west': 'Hallway'},
+                'item': 'gold'
+            },
+            'Monster Room': {
+                'description': 'A terrifying monster blocks your way!',
+                'exits': {'east': 'Hallway'},
+                'monster': True
+            }
+        }
+        self.player = None
+
+    def start_game(self):
+        name = input("Enter your character's name: ")
+        self.player = Player(name)
+        print(f"Welcome, {self.player.name}!")
+        self.play()
+
+    def play(self):
+        while self.player.health > 0:
+            print("\n" + self.rooms[self.player.location]['description'])
+            command = input("What do you want to do? (move/pick/show/quit): ").lower()
+
+            if command == 'move':
+                direction = input("Which direction? (north/south/east/west): ").lower()
+                self.player.move(direction, self.rooms)
+                self.check_room()
+            elif command == 'pick':
+                if 'item' in self.rooms[self.player.location]:
+                    self.player.pick_item(self.rooms[self.player.location].pop('item'))
+                else:
+                    print("There's nothing to pick up here.")
+            elif command == 'show':
+                self.player.show_inventory()
+            elif command == 'quit':
+                print("Thanks for playing!")
+                break
+            else:
+                print("Invalid command.")
+
+    def check_room(self):
+        if 'monster' in self.rooms[self.player.location]:
+            self.fight_monster()
+
+    def fight_monster(self):
+        print("A monster attacks!")
+        while self.player.health > 0 and 'monster' in self.rooms[self.player.location]:
+            action = input("Do you want to fight or run? (fight/run): ").lower()
+            if action == 'fight':
+                if 'torch' in self.player.inventory:
+                    print("You use the torch to scare the monster away!")
+                    del self.rooms[self.player.location]['monster']
+                else:
+                    damage = random.randint(10, 30)
+                    self.player.health -= damage
+                    print(f"The monster attacks you for {damage} damage. You have {self.player.health} health left.")
+            elif action == 'run':
+                self.player.move('east', self.rooms)
+                break
+            else:
+                print("Invalid action.")
+
+if __name__ == "__main__":
+    game = Game()
+    game.start_game()
